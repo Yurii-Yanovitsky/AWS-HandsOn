@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>File Upload</title>
+    <style>
+      img {
+        height: 300px;
+        width: 300px;
+      }
+      div#images-container {
+        padding: 16px 0;
+        display: flex;
+        gap: 4px;
+      }
+      label {
+        cursor: pointer;
+        /* Style as you please, it will become the visible UI component. */
+      }
+      #imageInput {
+        opacity: 0;
+        position: absolute;
+        z-index: -1;
+      }
+    </style>
+    <script defer src="/script.js"></script>
+  </head>
+  <body>
+    <form id="uploadForm">
+      <p>
+        <label for="imageNameInput">Specify image name (optional):</label>
+        <input type="text" id="imageNameInput" name="imagename" />
+      </p>
+      <p>
+        <label for="imageInput">Browse...</label>
+        <input
+          required
+          type="file"
+          id="imageInput"
+          name="image"
+          accept="image/*"
+        />
+      </p>
+      <p>
+        <button type="submit">Upload</button>
+      </div>
+    </form>
+    <div id="message"></div>
+    <div id="images-container"></div>
+  </body>
+</html>
