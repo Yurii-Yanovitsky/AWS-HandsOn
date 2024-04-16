@@ -3,12 +3,14 @@
   <head>
     <title>File Upload</title>
     <style>
-      img {
+      div#images-container img {
         height: 300px;
         width: 300px;
       }
-      div#images-container {
-        padding: 16px 0;
+
+      div#images-container, div#thumbnails-container {
+        max-width: 100vw;
+        overflow: auto;
         display: flex;
         gap: 4px;
       }
@@ -45,6 +47,13 @@
       </div>
     </form>
     <div id="message"></div>
-    <div id="images-container"></div>
+    <div>
+      <h2>Images</h2>
+      <div id="images-container"></div>
+    </div>
+    <div>
+      <h2>Thumbnails</h2>
+      <div id="thumbnails-container"></div>
+    </div>
   </body>
 </html>

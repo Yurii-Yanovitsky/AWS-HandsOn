@@ -1,61 +1,74 @@
-const bucketName = "yanovitsky-demo1-s3";
-const bucketUrl = `https://${bucketName}.s3.amazonaws.com`;
+const loadImage = async (imageURL) => {
+  const imageName = new URL(imageURL).pathname.split("/")[1];
+  const imgElement = new Image();
+  imgElement.src = imageURL;
+  imgElement.alt = imageName;
 
-const loadImage = async (bucketUrl, key) => {
-  const imageUrl = `${bucketUrl}/${encodeURIComponent(key)}`;
-  const image = new Image();
-  image.src = imageUrl;
-  image.alt = key;
+  const imgDiv = document.createElement("div");
 
-  await new Promise((resolve) => {
-    image.addEventListener("load", () => {
-      resolve(image);
+  return new Promise((resolve) => {
+    imgElement.addEventListener("load", () => {
+      const label = document.createElement("label");
+      label.textContent = imageName;
+      const labelDiv = document.createElement("div");
+      labelDiv.appendChild(label);
+      imgDiv.appendChild(imgElement);
+      imgDiv.appendChild(labelDiv);
+      imgDiv.style = "padding: 0 16px;";
+      resolve(imgDiv);
     });
   });
+};
 
-  return image;
+const getImages = async (url) => {
+  // Fetch images directly from S3 bucket
+  const response = await fetch(url);
+  const images = await response.json();
+
+  const promises = [];
+
+  for (const image of images) {
+    promises.push(loadImage(image));
+  }
+
+  return Promise.all(promises);
 };
 
 const loadImages = async () => {
-  const messageElement = document.getElementById("message");
-  messageElement.textContent = "Loading...";
+  const imagesContainer = document.getElementById("images-container");
+  const thumbnailsContainer = document.getElementById("thumbnails-container");
+  document.getElementById("message").textContent = "Loading...";
 
-  // Fetch images directly from S3 bucket
-  fetch(bucketUrl)
-    .then((response) => response.text())
-    .then(async (xmlText) => {
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlText, "application/xml");
-      const keys = xmlDoc.getElementsByTagName("Key");
+  const [imageResult, thumbnailResult] = await Promise.allSettled([
+    getImages("/api/images"),
+    getImages("/api/thumbnails"),
+  ]);
 
-      const promises = [];
+  document.getElementById("message").textContent = "";
 
-      for (let i = 0; i < keys.length; i++) {
-        const key = keys[i].textContent;
-        promises.push(loadImage(bucketUrl, key));
-      }
+  if (imageResult.status === "fulfilled") {
+    imagesContainer.innerHTML = "";
+    imagesContainer.append(...imageResult.value);
+  }
 
-      const images = await Promise.all(promises);
-      const imagesContainer = document.getElementById("images-container");
-      imagesContainer.innerHTML = "";
+  if (imageResult.status === "rejected") {
+    console.error("Error fetching images:", imageResult.reason);
+    const errorMessageDiv = document.createElement("div");
+    errorMessageDiv.textContent = "Failed to load images";
+    document.getElementById("message").append(errorMessageDiv);
+  }
 
-      for (const image of images) {
-        const imageDiv = document.createElement("div");
-        const label = document.createElement("label");
-        label.textContent = image.alt;
-        const labelDiv = document.createElement("div");
-        labelDiv.appendChild(label);
-        imageDiv.appendChild(image);
-        imageDiv.appendChild(labelDiv);
-        imagesContainer.appendChild(imageDiv);
-      }
+  if (thumbnailResult.status === "fulfilled") {
+    thumbnailsContainer.innerHTML = "";
+    thumbnailsContainer.append(...thumbnailResult.value);
+  }
 
-      messageElement.textContent = "";
-    })
-    .catch((error) => {
-      console.error("Error fetching images:", error);
-      messageElement.textContent = "Failed to load images";
-    });
+  if (thumbnailResult.status === "rejected") {
+    console.error("Error fetching thumbnails:", thumbnailResult.reason);
+    const errorMessageDiv = document.createElement("div");
+    errorMessageDiv.textContent = "Failed to load thumbnails";
+    document.getElementById("message").appendChild(errorMessageDiv);
+  }
 };
 
 const handleFileUpload = async () => {
@@ -73,8 +86,8 @@ const handleFileUpload = async () => {
       console.log(document.getElementById("imageInput").files[0]);
 
       document.getElementById("message").textContent = "Loading...";
-      
-      fetch("/", {
+
+      fetch("/api/image", {
         method: "POST",
         body: formData,
       })
@@ -86,7 +99,9 @@ const handleFileUpload = async () => {
         })
         .then((message) => {
           document.getElementById("message").textContent = message;
-          loadImages();
+          setTimeout(() => {
+            loadImages();
+          }, 2000);
         })
         .catch((error) => {
           document.getElementById("message").textContent = error.message;
