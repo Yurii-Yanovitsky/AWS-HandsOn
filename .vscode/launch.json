@@ -10,7 +10,15 @@
       "name": "Launch Node.js Server",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["start"],
-      "skipFiles": ["<node_internals>/**"],
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Scaffold DB",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "scaffold:db"],
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }

@@ -31,6 +31,9 @@ const storageS3 = multerS3({
 });
 
 // Create the multer instance
-const upload = multer({ storage: storageS3 });
+const upload = multer({
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  storage: storageS3,
+});
 
 module.exports = upload;
